@@ -1,20 +1,51 @@
 import requests
+import graphene
 from flask import Flask
 from flask_graphql import GraphQLView
-from graphene import ObjectType, String, Schema
 
 app = Flask(__name__)
 
 
-class Query(ObjectType):
-    main = String()
+class Account(graphene.ObjectType):
+    accountId = graphene.ID()
+    name = graphene.String()
+    org = graphene.String()
+    pod = graphene.String()
 
-    def resolve_main(self, root, info=None):
-        response = requests.get('http://localhost:3000/').json()
+
+class AccountInput(graphene.InputObjectType):
+    name = graphene.String(required=True)
+    org = graphene.String(required=True)
+    pod = graphene.String(required=True)
+
+
+class CreateAccount(graphene.Mutation):
+    class Arguments:
+        input = AccountInput(required=True)
+
+    account = graphene.Field(Account)
+
+    def mutate(self, root, info=None, input=None):
+        response = requests.post(
+            'http://localhost:3000/accounts', data=input).json()
+        print(response)
+        account = Account(response)
+        return CreateAccount(account=account)
+
+
+class Query(graphene.ObjectType):
+    account = graphene.Field(Account)
+
+    def resolve_account(self, root):
+        response = requests.get('http://localhost:3000/accounts').json()
         return response
 
 
-schema = Schema(query=Query)
+class Mutation(graphene.ObjectType):
+    create_account = CreateAccount.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
 
 app.add_url_rule(
     '/graphql', view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True))
