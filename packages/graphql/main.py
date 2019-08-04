@@ -2,8 +2,10 @@ import requests
 import graphene
 from flask import Flask
 from flask_graphql import GraphQLView
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={"/graphql": {"origins": "http://localhost:3001"}})
 
 
 class Account(graphene.ObjectType):

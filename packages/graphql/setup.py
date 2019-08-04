@@ -6,6 +6,7 @@ setup(
     install_requires=[
         "flask",
         "flask_graphql",
+        "flask_cors",
         "graphql-core",
         "graphene",
         "requests"
